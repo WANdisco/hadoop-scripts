@@ -42,10 +42,10 @@ Options:
 
 Examples: 
 
-/test/Lev1/*/* hdfs hdfs 640 user::rw-,user::hadoop:rw-,group:staff::rw-,other::---
+/test/Lev1/*/* hdfs hdfs 640 user::rw-,group::rw-,other::---
 /test/Lev1/*/something_else/* hdfs hdfs 420
 /test/Lev1/*/something/* ACL user::hadoop:rw-,group:staff::rw-
-/test/Lev1/*/* hdfs hdfs 640 user::rw-,user::hadoop:rw-,group:staff::rw-,other::---  --notranslate
+/test/Lev1/*/* hdfs hdfs 640 user::rw-,group::rw-,other::---  --notranslate
 /test/Lev1/*/something/* ACL user::hadoop:rw-,group:staff::rw-  --notranslate
 /test/Lev1/vendor/something ACL user::hadoop:rw-,group:staff::rw-  -R
 
