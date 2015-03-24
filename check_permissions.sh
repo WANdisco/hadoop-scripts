@@ -41,9 +41,9 @@ Examples:
 
 /test/Lev1/*/* hdfs hdfs 640 user::rw-,user::hadoop:rw-,group:staff::rw-,other::---
 /test/Lev1/*/something_else/* hdfs hdfs 420
-/test/Lev1/*/something/* ACL user::rw-,user::hadoop:rw-,group:staff::rw-,other::---
+/test/Lev1/*/something/* ACL user::hadoop:rw-,group:staff::rw-
 /test/Lev1/*/* hdfs hdfs 640 user::rw-,user::hadoop:rw-,group:staff::rw-,other::---  --notranslate
-/test/Lev1/*/something/* ACL user::rw-,user::hadoop:rw-,group:staff::rw-,other::---  --notranslate
+/test/Lev1/*/something/* ACL user::hadoop:rw-,group:staff::rw-  --notranslate
 
 !!
 }
@@ -137,7 +137,9 @@ update_by_pattern() {
 
  ${HADOOP_CMD} fs -ls $LS_PARAM $pattern | \
   while read prm _ _ _ _ _ _ file; do
-    update_permissions $file $prm $2 $3 $4 $5 $6
+    if [ "$prm" != "Found" ]; then
+      update_permissions $file $prm $2 $3 $4 $5 $6
+    fi
   done 
 }
 
