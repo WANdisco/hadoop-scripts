@@ -127,6 +127,12 @@ log_verbose() {
 }
 
 
+log_error() {
+  echo "`date +"%D %H:%M --"` $@" >&2
+  echo "`date +"%D %H:%M --"` $@" >> $LOG_FILE  
+}
+
+
 update_by_pattern() {
   pattern=$1
 
@@ -177,7 +183,7 @@ update_permissions() {
     no_translate=$7
   fi
 
-  if [ "${prm:0:1}" == "d" ] && [ "$no_translate" != "--no_translate" ]
+  if [ "${prm:0:1}" == "d" ] && [ "$no_translate" != "--notranslate" ]
   then
     # this is a directory. update permissions adding the exec bit if necessary. 
     if [ "$UPDATE_FILE" = "1" ]; then
