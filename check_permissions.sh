@@ -157,12 +157,12 @@ update_permissions() {
   ACL_PARAM=
   res=
   if [ "$3" == "ACL" ]; then
-    ACL_PARAM=" --set "
     UPDATE_FILE=0
     acl_spec=$4
     no_translate=$5
   else
     UPDATE_FILE=1
+    ACL_PARAM=" --set "
     hdfs_user=$3
     hdfs_group=$4
     hdfs_perm=$5
