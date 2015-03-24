@@ -3,7 +3,8 @@
 LOG_DIR="/tmp"
 LOG_FILE="${LOG_DIR}/$(basename $0 .sh)_`date +"%Y_%m_%d_%H_%M_%S"`.log"
 
-HADOOP_CMD="/usr/local/hadoop-2.3.0/bin/hadoop"
+#HADOOP_CMD="/usr/local/hadoop-2.3.0/bin/hadoop"
+HADOOP_CMD=`type -p hadoop`
 
 trap '' ERR
 
@@ -134,7 +135,7 @@ update_by_pattern() {
     LS_PARAM=" -R "
   else
     log_verbose "Updating single item: $pattern"
-    LS_PARAM=
+    LS_PARAM=" -d "
   fi
 
  ${HADOOP_CMD} fs -ls $LS_PARAM $pattern | \
@@ -150,7 +151,7 @@ exec_hadoop_command() {
   if [ "$NOCHANGE" = "1" ] || [ "$VERBOSE_HADOOP" = "1" ]; then
     echo "**** $HADOOP_CMD $@" | tee -a $LOG_FILE
   fi
-  
+
   if [ "$NOCHANGE" = "0" ]; then
     ${HADOOP_CMD} $@ 2>&1 | tee -a $LOG_FILE
   fi
