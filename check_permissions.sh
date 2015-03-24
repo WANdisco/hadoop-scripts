@@ -39,11 +39,11 @@ Options:
 
 Examples: 
 
-/tesco/Lev1/*/* hdfs hdfs 640 user::rw-,user::hadoop:rw-,group:staff::rw-,other::---
-/tesco/Lev1/*/something_else/* hdfs hdfs 420
-/tesco/Lev1/*/something/* ACL user::rw-,user::hadoop:rw-,group:staff::rw-,other::---
-/tesco/Lev1/*/* hdfs hdfs 640 user::rw-,user::hadoop:rw-,group:staff::rw-,other::---  --notranslate
-/tesco/Lev1/*/something/* ACL user::rw-,user::hadoop:rw-,group:staff::rw-,other::---  --notranslate
+/test/Lev1/*/* hdfs hdfs 640 user::rw-,user::hadoop:rw-,group:staff::rw-,other::---
+/test/Lev1/*/something_else/* hdfs hdfs 420
+/test/Lev1/*/something/* ACL user::rw-,user::hadoop:rw-,group:staff::rw-,other::---
+/test/Lev1/*/* hdfs hdfs 640 user::rw-,user::hadoop:rw-,group:staff::rw-,other::---  --notranslate
+/test/Lev1/*/something/* ACL user::rw-,user::hadoop:rw-,group:staff::rw-,other::---  --notranslate
 
 !!
 }
