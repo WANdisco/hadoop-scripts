@@ -34,6 +34,8 @@ Options:
   Do not log into the log file, just output to console. 
  -q --quiet
   Turn off verbosity. Do not write any log messages, etc.
+ -v --verbose
+  Be verbose. For now just output the hadoop command before executing it.
  -x --notranslate
   Do not automatically translate permissions to add execute ("x") bit for directories.
 
@@ -145,9 +147,11 @@ update_by_pattern() {
 
 
 exec_hadoop_command() {
-  if [ "$NOCHANGE" = "1" ]; then
+  if [ "$NOCHANGE" = "1" ] || [ "$VERBOSE_HADOOP" = "1" ]; then
     echo "**** $HADOOP_CMD $@" | tee -a $LOG_FILE
-  else
+  fi
+  
+  if [ "$NOCHANGE" = "0" ]; then
     ${HADOOP_CMD} $@ 2>&1 | tee -a $LOG_FILE
   fi
 }
@@ -211,6 +215,7 @@ update_permissions() {
 
 
 VERBOSE=1
+VERBOSE_HADOOP=0
 NOCHANGE=0
 LOG_CURRENT=0
 NO_EXEC=0
@@ -227,6 +232,10 @@ while true; do
       shift
       VERBOSE=0     
       ;;
+    -v | --verbose)
+      shift
+      VERBOSE_HADOOP=1     
+      ;;      
     -n | --nochange)
       shift
       NOCHANGE=1
