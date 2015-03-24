@@ -47,6 +47,7 @@ Examples:
 /test/Lev1/*/something/* ACL user::hadoop:rw-,group:staff::rw-
 /test/Lev1/*/* hdfs hdfs 640 user::rw-,user::hadoop:rw-,group:staff::rw-,other::---  --notranslate
 /test/Lev1/*/something/* ACL user::hadoop:rw-,group:staff::rw-  --notranslate
+/test/Lev1/vendor/something ACL user::hadoop:rw-,group:staff::rw-  -R
 
 !!
 }
@@ -171,8 +172,22 @@ update_permissions() {
   res=
   if [ "$3" == "ACL" ]; then
     UPDATE_FILE=0
+    ACL_PARAM=" -m "
     acl_spec=$4
-    no_translate=$5
+    while true; do
+      case "$5" in 
+        -R|--recursive) 
+          shift
+          ACP_PARAM="${ACL_PARAM} -R "
+          ;;
+        --notranslate)
+          shift
+          no_translate="--notranslate"
+          ;;
+        *) break
+        ;;
+      esac
+    done
   else
     UPDATE_FILE=1
     ACL_PARAM=" --set "
