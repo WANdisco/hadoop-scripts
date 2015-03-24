@@ -178,7 +178,7 @@ update_permissions() {
       case "$5" in 
         -R|--recursive) 
           shift
-          ACP_PARAM="${ACL_PARAM} -R "
+          ACL_PARAM="${ACL_PARAM} -R "
           ;;
         --notranslate)
           shift
