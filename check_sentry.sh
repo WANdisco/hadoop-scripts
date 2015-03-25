@@ -4,17 +4,17 @@ LOG_DIR="/tmp"
 LOG_FILE="${LOG_DIR}/$(basename $0 .sh)_`date +"%Y_%m_%d_%H_%M_%S"`.log"
 
 HIVE_CMD="/usr/bin/beeline"
-#HIVE_CMD=`type -p hive`
+#HIVE_CMD=`type -p beeline`
 HIVE_USER=hive
 HIVE_PASSWORD=hive
 HIVESERVER2=testserver
 HIVESERVER_PORT=10000
 HIVE_PRINCIPAL="hive/_HOST@TEST.COM"
 
-HIVE_URL="jdbc:hive2://$HIVESERVER2:${HIVESERVER_PORT}/default;$HIVE_PRINCIPAL"
+HIVE_URL="jdbc:hive2://$HIVESERVER2:${HIVESERVER_PORT}/default;principal=$HIVE_PRINCIPAL"
 
 
-HIVE_CMD="${HIVE_CMD} -u $HIVE_USER -p $HIVE_PASSWORD -u $HIVE_URL"
+HIVE_CMD="${HIVE_CMD} -n $HIVE_USER -p $HIVE_PASSWORD -u \"$HIVE_URL\""
 
 # Default values. Do not change! 
 VERBOSE=1
@@ -52,7 +52,7 @@ Options:
 
 Examples: 
 
-testdb bill read
+testdb bill select
 testdb.table1 bill all
 bill admins
 /testdb bill all
@@ -93,52 +93,57 @@ exec_hive_command() {
   fi
 
   if [ "$NOCHANGE" = "0" ]; then
-    ${HIVE_CMD} $@ 2>&1 | tee -a $LOG_FILE
+    ${HIVE_CMD} "$@" 2>&1 | tee -a $LOG_FILE
   fi
 }
 
 
 update_sentry_permissions() {
   pattern=$1
-  GRANT_TYPE=
+  role=$2
+  permissions=$3
 
-if [ x"$3" = "x" ]; then
-  # This is a role pattern
-  log_verbose "Granting role $pattern to group $2"
-  exec_hive_command "-e" "\"GRANT ROLE $pattern TO GROUP $2\""
-  return
-fi
+  if [ x"$permissions" = "x" ]; then
+    # This is a role pattern
+    log_verbose "Granting role $pattern to group $role"
+    exec_hive_command "-e" "\"GRANT ROLE $pattern TO GROUP $role\""
+    return
+  fi
 
 
   if [[ "$pattern" =~ [.] ]]; then
     # This is a table pattern
-    if [ -z $2 ] || [ -z $3 ]; then
-      echo "Invalid pattern: $1 $2 $3"
+    if [ -z $role ] || [ -z $permissions ]; then
+      echo "Invalid pattern: $pattern $role $permissions"
       return
     fi
-    GRANT_TYPE="TABLE"
+    set -- "$pattern"
+    IFS="."; declare -a arr=($*)
+    IFS=" "
+    log_verbose "Granting $permissions permissions on $pattern to $role"
+    exec_hive_command "-e" "\"USE ${arr[0]};GRANT $permissions ON TABLE ${arr[1]} TO ROLE $role\""
+    return
   else
     if [[ $pattern =~ [/] ]]; then
       # This is a path pattern
-      if [ -z $2 ] || [ -z $3 ]; then
-        echo "Invalid pattern: $1 $2 $3"
+      if [ -z $role ] || [ -z $permissions ]; then
+        echo "Invalid pattern: $pattern $role $permissions"
         return
       fi
-      GRANT_TYPE="URI"
+      log_verbose "Granting $permissions permissions on $pattern to $role"
+      exec_hive_command "-e" "\"GRANT $permissions ON URI '$pattern' TO ROLE $role\""
+      return
     else
-      if [ -n $2 ] && [ -n $3 ]; then
+      if [ -n $role ] && [ -n $permissions ]; then
         # This is a table.
-        GRANT_TYPE="DATABASE"
+        log_verbose "Granting $permissions permissions on $pattern to $role"
+        exec_hive_command "-e" "\"GRANT $permissions ON DATABASE $pattern TO ROLE $role\""
+        return
       else
           # Some parameter here... don't support it for now...
           echo "Unsupported combination"
       fi
     fi
-  fi
-
-  if [ -n $GRANT_TYPE ]; then
-    log_verbose "Granting $3 permissions on $pattern to $2"
-    exec_hive_command "-e" "\"GRANT $3 ON $GRANT_TYPE '$pattern' TO ROLE $2\""
   fi
 }
 
