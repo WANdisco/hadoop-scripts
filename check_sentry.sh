@@ -3,8 +3,18 @@
 LOG_DIR="/tmp"
 LOG_FILE="${LOG_DIR}/$(basename $0 .sh)_`date +"%Y_%m_%d_%H_%M_%S"`.log"
 
-HIVE_CMD="/usr/bin/hive"
+HIVE_CMD="/usr/bin/beeline"
 #HIVE_CMD=`type -p hive`
+HIVE_USER=hive
+HIVE_PASSWORD=hive
+HIVESERVER2=testserver
+HIVESERVER_PORT=10000
+HIVE_PRINCIPAL="hive/_HOST@TEST.COM"
+
+HIVE_URL="jdbc:hive2://$HIVESERVER2:${HIVESERVER_PORT}/default;$HIVE_PRINCIPAL"
+
+
+HIVE_CMD="${HIVE_CMD} -u $HIVE_USER -p $HIVE_PASSWORD -u $HIVE_URL"
 
 # Default values. Do not change! 
 VERBOSE=1
