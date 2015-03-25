@@ -121,7 +121,7 @@ update_sentry_permissions() {
     IFS="."; declare -a arr=($*)
     IFS=" "
     log_verbose "Granting $permissions permissions on $pattern to $role"
-    exec_hive_command "-e" "\"USE ${arr[0]};GRANT $permissions ON TABLE ${arr[1]} TO ROLE $role\""
+    exec_hive_command "-e" "\"USE ${arr[0]}\"" "-e" "\"GRANT $permissions ON TABLE ${arr[1]} TO ROLE $role\""
     return
   else
     if [[ $pattern =~ [/] ]]; then
