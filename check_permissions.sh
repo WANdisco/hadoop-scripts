@@ -170,6 +170,10 @@ update_permissions() {
   prm=$2
   ACL_PARAM=
   res=
+  NO_TRANSLATE=
+  HDFS_PARAM=
+
+
   if [ "$3" == "ACL" ]; then
     UPDATE_FILE=0
     ACL_PARAM=" -m "
@@ -182,7 +186,7 @@ update_permissions() {
           ;;
         --notranslate)
           shift
-          no_translate="--notranslate"
+          NO_TRANSLATE=1
           ;;
         *) break
         ;;
@@ -194,11 +198,28 @@ update_permissions() {
     hdfs_user=$3
     hdfs_group=$4
     hdfs_perm=$5
-    acl_spec=$6
-    no_translate=$7
+
+    if [ -z $6 ] && [ "${6:0:1}" != "-" ]; then
+      acl_spec=$6
+      shift
+    fi
+    while true; do
+      case "$6" in 
+        -R|--recursive) 
+          shift
+          HDFS_PARAM="${ACL_PARAM} -R "
+          ;;
+        --notranslate)
+          shift
+          NO_TRANSLATE=1
+          ;;
+        *) break
+        ;;
+      esac
+    done
   fi
 
-  if [ "${prm:0:1}" == "d" ] && [ "$no_translate" != "--notranslate" ]
+  if [ "${prm:0:1}" == "d" ] && [ "$NO_TRANSLATE" -ne "1" ]
   then
     # this is a directory. update permissions adding the exec bit if necessary. 
     if [ "$UPDATE_FILE" = "1" ]; then
@@ -225,8 +246,8 @@ update_permissions() {
   if [ "$UPDATE_FILE" = "1" ]; then
     # Update HDFS permissions
     log_verbose "$file --hdfs--> $hdfs_user:$hdfs_group:$hdfs_perm"
-    exec_hadoop_command fs -chown $hdfs_user:$hdfs_group $file
-    exec_hadoop_command fs -chmod $hdfs_perm $file
+    exec_hadoop_command fs -chown $HDFS_PARAM $hdfs_user:$hdfs_group $file
+    exec_hadoop_command fs -chmod $HDFS_PARAM $hdfs_perm $file
   fi
   if [ -n $acl_spec ]; then
     # Update HDFS ACLs
@@ -292,7 +313,11 @@ fi
 log_verbose "Reading patterns list from file: $FILE"
 
 while read pattern hdfs_user hdfs_group hdfs_perm acl_spec translate; do
-  update_by_pattern $pattern $hdfs_user $hdfs_group $hdfs_perm $acl_spec $translate
+    # Skip comments
+    [[ "$pattern" =~ \#.* ]] && continue
+    # Skip empty lines
+    [ -z "$pattern" ] && continue
+    update_by_pattern $pattern $hdfs_user $hdfs_group $hdfs_perm $acl_spec $translate
 done < $FILE
 
 
