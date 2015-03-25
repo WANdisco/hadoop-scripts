@@ -148,7 +148,7 @@ update_by_pattern() {
  ${HADOOP_CMD} fs -ls $LS_PARAM $pattern | \
   while read prm _ _ _ _ _ _ file; do
     if [ "$prm" != "Found" ]; then
-      update_permissions $file $prm $2 $3 $4 $5 $6
+      update_permissions $file $prm $2 $3 $4 $5 $6 $7
     fi
   done 
 }
@@ -172,6 +172,7 @@ update_permissions() {
   res=
   NO_TRANSLATE=
   HDFS_PARAM=
+  acl_spec=
 
 
   if [ "$3" == "ACL" ]; then
@@ -199,15 +200,16 @@ update_permissions() {
     hdfs_group=$4
     hdfs_perm=$5
 
-    if [ -z $6 ] && [ "${6:0:1}" != "-" ]; then
+    if [ -z $6 ] || [ "${6:0:1}" != "-" ]; then
       acl_spec=$6
       shift
-    fi
+    fi    
+    
     while true; do
       case "$6" in 
         -R|--recursive) 
           shift
-          HDFS_PARAM="${ACL_PARAM} -R "
+          HDFS_PARAM="${HDFS_PARAM} -R "
           ;;
         --notranslate)
           shift
@@ -219,7 +221,7 @@ update_permissions() {
     done
   fi
 
-  if [ "${prm:0:1}" == "d" ] && [ "$NO_TRANSLATE" -ne "1" ]
+  if [ "${prm:0:1}" == "d" ] && [ -z $NO_TRANSLATE ]
   then
     # this is a directory. update permissions adding the exec bit if necessary. 
     if [ "$UPDATE_FILE" = "1" ]; then
@@ -312,12 +314,12 @@ fi
 
 log_verbose "Reading patterns list from file: $FILE"
 
-while read pattern hdfs_user hdfs_group hdfs_perm acl_spec translate; do
+while read pattern hdfs_user hdfs_group hdfs_perm acl_spec translate recursive; do
     # Skip comments
     [[ "$pattern" =~ \#.* ]] && continue
     # Skip empty lines
     [ -z "$pattern" ] && continue
-    update_by_pattern $pattern $hdfs_user $hdfs_group $hdfs_perm $acl_spec $translate
+    update_by_pattern $pattern $hdfs_user $hdfs_group $hdfs_perm $acl_spec $translate $recursive
 done < $FILE
 
 
