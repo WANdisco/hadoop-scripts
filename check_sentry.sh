@@ -1,7 +1,11 @@
 #!/bin/bash
 
+# be strict about permissions for logs and sentry query files.
+umask 077
+
 LOG_DIR="/tmp"
 LOG_FILE="${LOG_DIR}/$(basename $0 .sh)_`date +"%Y_%m_%d_%H_%M_%S"`.log"
+EXEC_FILE="${LOG_DIR}/$(basename $0 .sh)_`date +"%Y_%m_%d_%H_%M_%S"`.sentry"
 
 HIVE_CMD="/usr/bin/beeline"
 #HIVE_CMD=`type -p beeline`
@@ -21,6 +25,7 @@ VERBOSE=1
 VERBOSE_HIVE=0
 NOCHANGE=0
 LOG_CURRENT=0
+RETAIN_SQL=0
 
 
 trap '' ERR
@@ -47,6 +52,12 @@ Options:
   Do not actually change anything, just print the intent.
  -q --quiet
   Turn off verbosity. Do not write any log messages, etc.
+ --log_current
+  Log current state of the file before applying the new permissions  
+ -c 
+  Do not log into the log file, just output to console.   
+ -r 
+  Retain .sentry file containing all grant statements
  -v --verbose
   Be verbose. For now just output the hadoop command before executing it.
 
@@ -98,6 +109,15 @@ exec_hive_command() {
 }
 
 
+write_hive_command() {
+  if [ "$VERBOSE_HIVE" = "1" ]; then
+    echo "-----> $@" | tee -a $LOG_FILE
+  fi
+  echo "$@" >> $EXEC_FILE
+}
+
+
+
 update_sentry_permissions() {
   pattern=$1
   role=$2
@@ -105,11 +125,13 @@ update_sentry_permissions() {
 
   if [ x"$permissions" = "x" ]; then
     # This is a role pattern
+    if [ "$LOG_CURRENT" = "1" ]; then
+      write_hive_command "SHOW ROLE GRANT GROUP $role;"
+    fi
     log_verbose "Granting role $pattern to group $role"
-    exec_hive_command "-e" "\"GRANT ROLE $pattern TO GROUP $role\""
+    write_hive_command "GRANT ROLE $pattern TO GROUP $role;"
     return
   fi
-
 
   if [[ "$pattern" =~ [.] ]]; then
     # This is a table pattern
@@ -120,8 +142,12 @@ update_sentry_permissions() {
     set -- "$pattern"
     IFS="."; declare -a arr=($*)
     IFS=" "
+    if [ "$LOG_CURRENT" = "1" ]; then
+      write_hive_command "SHOW GRANT ROLE $role;"
+    fi    
     log_verbose "Granting $permissions permissions on $pattern to $role"
-    exec_hive_command "-e" "\"USE ${arr[0]}\"" "-e" "\"GRANT $permissions ON TABLE ${arr[1]} TO ROLE $role\""
+    write_hive_command "USE ${arr[0]};"
+    write_hive_command "GRANT $permissions ON TABLE ${arr[1]} TO ROLE $role;"
     return
   else
     if [[ $pattern =~ [/] ]]; then
@@ -130,14 +156,20 @@ update_sentry_permissions() {
         echo "Invalid pattern: $pattern $role $permissions"
         return
       fi
+      if [ "$LOG_CURRENT" = "1" ]; then
+        write_hive_command "SHOW GRANT ROLE $role;"
+      fi          
       log_verbose "Granting $permissions permissions on $pattern to $role"
-      exec_hive_command "-e" "\"GRANT $permissions ON URI '$pattern' TO ROLE $role\""
+      write_hive_command "GRANT $permissions ON URI '$pattern' TO ROLE $role;"
       return
     else
       if [ -n $role ] && [ -n $permissions ]; then
         # This is a table.
+        if [ "$LOG_CURRENT" = "1" ]; then
+          write_hive_command "SHOW GRANT ROLE $role;"
+        fi            
         log_verbose "Granting $permissions permissions on $pattern to $role"
-        exec_hive_command "-e" "\"GRANT $permissions ON DATABASE $pattern TO ROLE $role\""
+        write_hive_command "GRANT $permissions ON DATABASE $pattern TO ROLE $role;"
         return
       else
           # Some parameter here... don't support it for now...
@@ -146,7 +178,6 @@ update_sentry_permissions() {
     fi
   fi
 }
-
 
 
 
@@ -170,10 +201,18 @@ while true; do
       shift
       NOCHANGE=1
       ;;
-    --l)
+    --log_current)
+      shift
+      LOG_CURRENT=1
+      ;;      
+    -c)
       shift
       LOG_FILE=/dev/null
       ;;
+    -r)
+      shift
+      RETAIN_SQL=1
+      ;;      
     -*) echo "ERROR: Unknown option: $1" >&2
       exit 1
       ;;
@@ -196,7 +235,19 @@ while read pattern role permission parameters; do
     [[ "$pattern" =~ \#.* ]] && continue
     # Skip empty lines
     [ -z "$pattern" ] && continue
-    update_sentry_permissions $pattern $role $permission $parameters
+    if [[ "$pattern" =~ \'.* ]]; then 
+      echo "${pattern//\'}" "${role//\'}" "${permission//\'}" "${parameters//\'}" ";" >> $EXEC_FILE
+    else
+      update_sentry_permissions $pattern $role $permission $parameters    
+    fi
 done < $FILE
+
+if [ -s $EXEC_FILE ]; then
+  exec_hive_command "-f" "$EXEC_FILE"
+fi
+
+if [ "$RETAIN_SQL" = "0" ]; then
+  rm -f $EXEC_FILE
+fi
 
 
