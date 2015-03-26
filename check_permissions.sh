@@ -32,7 +32,7 @@ Options:
   Display this help message.
  -n --nochange
   Do not actually change anything, just print the intent.
- --log_current
+ -l --log_current
   Log current state of the file before applying the new permissions
  -c
   Do not log into the log file, just output to console. 
@@ -288,7 +288,7 @@ while true; do
       shift
       NOCHANGE=1
       ;;
-    --log_current)
+    -l | --log_current)
       shift
       LOG_CURRENT=1
       ;;

@@ -201,7 +201,7 @@ while true; do
       shift
       NOCHANGE=1
       ;;
-    --log_current)
+    -l | --log_current)
       shift
       LOG_CURRENT=1
       ;;      
