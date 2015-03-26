@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Be strict about the file permissions for logs
+umask 077
+
 LOG_DIR="/tmp"
 LOG_FILE="${LOG_DIR}/$(basename $0 .sh)_`date +"%Y_%m_%d_%H_%M_%S"`.log"
 
@@ -31,7 +34,7 @@ Options:
   Do not actually change anything, just print the intent.
  --log_current
   Log current state of the file before applying the new permissions
- -l 
+ -c
   Do not log into the log file, just output to console. 
  -q --quiet
   Turn off verbosity. Do not write any log messages, etc.
@@ -204,7 +207,7 @@ update_permissions() {
       acl_spec=$6
       shift
     fi    
-    
+
     while true; do
       case "$6" in 
         -R|--recursive) 
@@ -289,7 +292,7 @@ while true; do
       shift
       LOG_CURRENT=1
       ;;
-    --l)
+    -c)
       shift
       LOG_FILE=/dev/null
       ;;
