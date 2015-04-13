@@ -169,7 +169,8 @@ if [ -f $KNOWN_DIFF ]; then
   fi
   cat $CUR_DIFF
 else
-  cp $DIFF_FILE $KNOWN_DIFF
+#  Uncomment the below if you want to copy the diff as known-good automatically if the latter doesn't exist
+#  cp $DIFF_FILE $KNOWN_DIFF
   cat $DIFF_FILE
 fi
 
