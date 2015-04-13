@@ -9,7 +9,6 @@ DIFF_DIR="/tmp/$(basename $0 .sh)"
 TIME_SPEC=`date +"%Y_%m_%d_%H_%M_%S"`
 
 LOG_FILE="${LOG_DIR}/$(basename $0 .sh)_${TIME_SPEC}.log"
-LOG_FILE="${LOG_DIR}/$(basename $0 .sh)_${TIME_SPEC}.msg"
 
 USER=admin
 PASSWORD=admin
@@ -81,7 +80,7 @@ get_cluster_config() {
   for service in `curl -s -u "${USER}:${PASSWORD}" $url/$cluster/services | grep name| awk -F: '{print $2}' | tr -d '", ' | sed 's/[A-Z_0-9]*//g' | sort `
   do
     echo "----- $service ------" >> $FILE_NAME
-    curl -s -u "$USER:$PASSWORD" "$url/$cluster/services/$service/config?view=summary" >> $FILE_NAME
+    curl -s -u "$USER:$PASSWORD" "$url/$cluster/services/$service/config?view=full" >> $FILE_NAME
   done
 }
 
@@ -112,7 +111,7 @@ while true; do
       ;;
     -p)
       shift
-      USER=$1
+      PASSWORD=$1
       shift
       ;;
     -c)
