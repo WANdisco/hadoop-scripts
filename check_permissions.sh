@@ -3,7 +3,8 @@
 # Be strict about the file permissions for logs
 umask 077
 
-LOG_DIR="/tmp"
+LOG_DIR="/var/log/$(basename $0 .sh)"
+mkdir -p $LOG_DIR
 LOG_FILE="${LOG_DIR}/$(basename $0 .sh)_`date +"%Y_%m_%d_%H_%M_%S"`.log"
 
 #HADOOP_CMD="/usr/local/hadoop-2.3.0/bin/hadoop"
@@ -213,6 +214,7 @@ update_permissions() {
         -R|--recursive) 
           shift
           HDFS_PARAM="${HDFS_PARAM} -R "
+          ACL_PARAM="${ACL_PARAM} -R "
           ;;
         --notranslate)
           shift
@@ -256,8 +258,15 @@ update_permissions() {
   fi
   if [ -n $acl_spec ]; then
     # Update HDFS ACLs
-    log_verbose "$file --acl--> $acl_spec"
-    exec_hadoop_command fs -setfacl ${ACL_PARAM} $acl_spec $file
+    if [[ "$acl_spec" =~ .*default.* ]]; then 
+      if [ "${prm:0:1}" == "d" ]; then
+        log_verbose "$file --acl--> $acl_spec"  
+        exec_hadoop_command fs -setfacl ${ACL_PARAM} $acl_spec $file
+      fi
+    else
+      log_verbose "$file --acl--> $acl_spec"
+      exec_hadoop_command fs -setfacl ${ACL_PARAM} $acl_spec $file
+    fi
   fi
 }
 
