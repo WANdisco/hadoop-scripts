@@ -46,7 +46,7 @@ update-alternatives --install "/usr/bin/tnameserv" "tnameserv" "/usr/lib/jvm/jav
 update-alternatives --install "/usr/bin/policytool" "policytool" "/usr/lib/jvm/java-7-oracle-amd64/jre/bin/policytool" 1
 update-alternatives --install "/usr/bin/jexec" "jexec" "/usr/lib/jvm/java-7-oracle-amd64/jre/lib/jexec" 1
 
-cat << __EOF__ > /usr/lib/jvm/.java-7-oracle-amd64.info
+cat << __EOF__ > /usr/lib/jvm/.java-7-oracle-amd64.jinfo
 name=java-7-oracle-amd64
 alias=java-1.7.0-oracle
 priority=1051
