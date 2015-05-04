@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in `ls -ld /usr/java/jdk1.7\*`; do 
+for i in `ls -ld /usr/java/jdk1.7*`; do 
   JDK_PATH=$i;
 done
 
