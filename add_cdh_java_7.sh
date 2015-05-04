@@ -1,11 +1,11 @@
 #!/bin/bash
 
-for i in `cd /usr/java; ls -ld jdk-1.7\*`; do 
+for i in `ls -ld /usr/java/jdk1.7\*`; do 
   JDK_PATH=$i;
 done
 
 rm -f /usr/java/java-7-oracle-amd64
-ln -s /usr/java/$JDK_PATH /usr/java/java-7-oracle-amd64
+ln -s $JDK_PATH /usr/java/java-7-oracle-amd64
 
 update-alternatives --install "/usr/bin/appletviewer" "appletviewer" "/usr/java/java-7-oracle-amd64/bin/appletviewer" 1
 update-alternatives --install "/usr/bin/extcheck" "extcheck" "/usr/java/java-7-oracle-amd64/bin/extcheck" 1
