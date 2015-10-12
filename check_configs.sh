@@ -3,12 +3,12 @@
 # be strict about permissions for logs and sentry query files.
 umask 077
 
-LOG_DIR="/tmp"
-DIFF_DIR="/tmp/$(basename $0 .sh)"
+LOG_DIR="/var/log"
+DIFF_DIR="${LOG_DIR}/$(basename $0 .sh)"
 
 TIME_SPEC=`date +"%Y_%m_%d_%H_%M_%S"`
 
-LOG_FILE="${LOG_DIR}/$(basename $0 .sh)_${TIME_SPEC}.log"
+LOG_FILE="${DIFF_DIR}/$(basename $0 .sh)_${TIME_SPEC}.log"
 
 USER=admin
 PASSWORD=admin
